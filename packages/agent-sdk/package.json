@@ -1,6 +1,6 @@
 {
   "name": "@helix402/agent-sdk",
-  "version": "0.1.0-beta.3",
+  "version": "0.1.0-beta.4",
   "description": "x402 payment SDK for AI agents — automatic HTTP 402 handling with managed wallets",
   "author": "Helix402",
   "license": "Apache-2.0",
