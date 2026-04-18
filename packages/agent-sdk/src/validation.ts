@@ -108,8 +108,48 @@ export function formatUSDC(smallestUnits: string | bigint): string {
   return `${whole}.${frac.toString().padStart(USDC_DECIMALS, "0")}`;
 }
 
-/** Extract error message from unknown catch value. */
+const ERROR_BODY_MAX_LENGTH = 2000;
+
+type AxiosLikeResponse = { status?: number; data?: unknown };
+
+function getAxiosResponse(err: Error): AxiosLikeResponse | undefined {
+  return (err as unknown as { response?: AxiosLikeResponse }).response;
+}
+
+function stringifyBody(data: unknown): string {
+  if (data == null) return "";
+  if (typeof data === "string") return data;
+  try {
+    return JSON.stringify(data);
+  } catch {
+    return String(data);
+  }
+}
+
+function truncate(s: string, max: number): string {
+  return s.length > max ? `${s.slice(0, max)}…` : s;
+}
+
+/**
+ * Extract a useful error message from an unknown catch value.
+ *
+ * Axios stores the server response body on `err.response.data`, but
+ * `err.message` is generic ("Request failed with status code 400").
+ * For Axios-shaped HTTP errors, append the status and response body
+ * so callers can see *why* the request failed.
+ */
 export function extractErrorMessage(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  return String(err);
+  if (!(err instanceof Error)) return String(err);
+
+  const response = getAxiosResponse(err);
+  if (!response) return err.message;
+
+  const status =
+    typeof response.status === "number" ? ` [HTTP ${response.status}]` : "";
+  const body = truncate(stringifyBody(response.data), ERROR_BODY_MAX_LENGTH);
+  const bodyPart = body ? `: ${body}` : "";
+
+  return status || bodyPart
+    ? `${err.message}${status}${bodyPart}`
+    : err.message;
 }
