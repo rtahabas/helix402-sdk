@@ -9,7 +9,12 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
-import { PaymentRequiredOptions, PaymentReceipt, PaidRequest, isValidAddress } from "./types";
+import {
+  PaymentRequiredOptions,
+  PaymentReceipt,
+  PaidRequest,
+  isValidAddress,
+} from "./types";
 
 const USDC_DECIMALS = 6;
 
@@ -17,7 +22,9 @@ const USDC_DECIMALS = 6;
 function parseUSDCPrice(amount: string): string {
   const parts = amount.split(".");
   const whole = parts[0] || "0";
-  const frac = (parts[1] || "").padEnd(USDC_DECIMALS, "0").slice(0, USDC_DECIMALS);
+  const frac = (parts[1] || "")
+    .padEnd(USDC_DECIMALS, "0")
+    .slice(0, USDC_DECIMALS);
   const result = BigInt(whole) * BigInt(10 ** USDC_DECIMALS) + BigInt(frac);
   if (result <= 0n) throw new Error(`Invalid price: "${amount}"`);
   return result.toString();
@@ -39,7 +46,9 @@ function parseUSDCPrice(amount: string): string {
  * );
  * ```
  */
-export function createPaymentRequiredMiddleware(options: PaymentRequiredOptions) {
+export function createPaymentRequiredMiddleware(
+  options: PaymentRequiredOptions,
+) {
   const {
     price,
     wallet,
@@ -57,17 +66,24 @@ export function createPaymentRequiredMiddleware(options: PaymentRequiredOptions)
 
   if (!price) throw new Error("PaymentRequiredMiddleware: price is required");
   if (!network)
-    throw new Error("PaymentRequiredMiddleware: network is required (e.g. 'base', 'base-sepolia')");
+    throw new Error(
+      "PaymentRequiredMiddleware: network is required (e.g. 'base', 'base-sepolia')",
+    );
   if (!wallet) throw new Error("PaymentRequiredMiddleware: wallet is required");
   if (!isValidAddress(wallet))
     throw new Error(`PaymentRequiredMiddleware: invalid wallet "${wallet}"`);
-  if (!gatewayPublicKey) throw new Error("PaymentRequiredMiddleware: gatewayPublicKey is required");
+  if (!gatewayPublicKey)
+    throw new Error("PaymentRequiredMiddleware: gatewayPublicKey is required");
 
   // Convert human-readable price to smallest units
   const priceSmallestUnits = parseUSDCPrice(String(price));
   const normalizedWallet = wallet.toLowerCase();
 
-  return function paymentRequired(req: PaidRequest, res: Response, next: NextFunction) {
+  return function paymentRequired(
+    req: PaidRequest,
+    res: Response,
+    next: NextFunction,
+  ) {
     const authHeader = req.headers.authorization || "";
     const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
     const resource = resourceResolver(req);
@@ -90,7 +106,9 @@ export function createPaymentRequiredMiddleware(options: PaymentRequiredOptions)
         ],
       };
 
-      const encoded = Buffer.from(JSON.stringify(paymentRequired)).toString("base64");
+      const encoded = Buffer.from(JSON.stringify(paymentRequired)).toString(
+        "base64",
+      );
       res.set("payment-required", encoded);
       if (facilitatorUrl) res.set("x-payment-facilitator", facilitatorUrl);
 
@@ -113,7 +131,9 @@ export function createPaymentRequiredMiddleware(options: PaymentRequiredOptions)
     // ─── Verify JWT receipt ─────────────────────────────
 
     try {
-      const payload = jwt.verify(token, gatewayPublicKey, { audience }) as PaymentReceipt;
+      const payload = jwt.verify(token, gatewayPublicKey, {
+        audience,
+      }) as PaymentReceipt;
 
       if (String(payload.sub).toLowerCase() !== normalizedWallet) {
         return res.status(403).json({ error: "Receipt merchant mismatch" });
@@ -135,9 +155,16 @@ export function createPaymentRequiredMiddleware(options: PaymentRequiredOptions)
       return next();
     } catch (error: unknown) {
       const isExpired = error instanceof jwt.TokenExpiredError;
-      return res.status(403).json({ error: isExpired ? "Receipt expired" : "Invalid receipt" });
+      return res
+        .status(403)
+        .json({ error: isExpired ? "Receipt expired" : "Invalid receipt" });
     }
   };
 }
 
-export { PaymentRequiredOptions, PaymentReceipt, PaidRequest, isValidAddress } from "./types";
+export {
+  PaymentRequiredOptions,
+  PaymentReceipt,
+  PaidRequest,
+  isValidAddress,
+} from "./types";

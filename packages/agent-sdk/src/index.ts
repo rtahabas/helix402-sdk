@@ -5,10 +5,19 @@
  * Automatically handles HTTP 402 responses with on-chain USDC settlement.
  */
 
-import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import axios, {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
 import { ethers } from "ethers";
 
-import { PaymentClientOptions, PaymentClientResult, Helix402Error, ErrorCodes } from "./types";
+import {
+  PaymentClientOptions,
+  PaymentClientResult,
+  Helix402Error,
+  ErrorCodes,
+} from "./types";
 import { createBudgetGuard } from "./budget";
 import {
   validateEthereumAddress,
@@ -46,7 +55,9 @@ interface PaidRequestConfig extends InternalAxiosRequestConfig {
   __paidRequest?: boolean;
 }
 
-export function createPaymentClient(options: PaymentClientOptions): PaymentClientResult {
+export function createPaymentClient(
+  options: PaymentClientOptions,
+): PaymentClientResult {
   const {
     gatewayUrl,
     apiKey,
@@ -60,9 +71,16 @@ export function createPaymentClient(options: PaymentClientOptions): PaymentClien
     timeoutMs = DEFAULT_TIMEOUT_MS,
   } = options;
 
-  if (!gatewayUrl) throw new Helix402Error("gatewayUrl is required", ErrorCodes.INVALID_CONFIG);
+  if (!gatewayUrl)
+    throw new Helix402Error(
+      "gatewayUrl is required",
+      ErrorCodes.INVALID_CONFIG,
+    );
   if (!apiKey && !privateKey)
-    throw new Helix402Error("Either apiKey or privateKey is required", ErrorCodes.INVALID_CONFIG);
+    throw new Helix402Error(
+      "Either apiKey or privateKey is required",
+      ErrorCodes.INVALID_CONFIG,
+    );
   if (apiKey && privateKey)
     throw new Helix402Error(
       "Provide either apiKey or privateKey, not both",
@@ -97,11 +115,15 @@ export function createPaymentClient(options: PaymentClientOptions): PaymentClien
 
   const budget = createBudgetGuard(budgetPolicy);
   const sdkId =
-    (axiosConfig?.headers as Record<string, string>)?.["X-Helix-SDK"] || "agent-sdk/0.1.0";
+    (axiosConfig?.headers as Record<string, string>)?.["X-Helix-SDK"] ||
+    "agent-sdk/0.1.0";
   const client = axios.create({
     timeout: timeoutMs,
     ...axiosConfig,
-    headers: { "X-Helix-SDK": sdkId, ...((axiosConfig?.headers as Record<string, string>) || {}) },
+    headers: {
+      "X-Helix-SDK": sdkId,
+      ...((axiosConfig?.headers as Record<string, string>) || {}),
+    },
   });
 
   client.interceptors.response.use(
@@ -109,7 +131,12 @@ export function createPaymentClient(options: PaymentClientOptions): PaymentClien
     async (error: AxiosError) => {
       const response = error.response;
       const originalConfig = error.config as PaidRequestConfig | undefined;
-      if (!response || response.status !== 402 || !originalConfig || originalConfig.__paidRequest)
+      if (
+        !response ||
+        response.status !== 402 ||
+        !originalConfig ||
+        originalConfig.__paidRequest
+      )
         throw error;
 
       const paymentReq = parsePaymentRequired(response);
@@ -127,8 +154,18 @@ export function createPaymentClient(options: PaymentClientOptions): PaymentClien
       let paymentPayload, paymentRequirements;
 
       if (mode === "managed") {
-        const signRes = await requestGatewaySign(gatewayUrl, apiKey!, payTo, amount, network);
-        paymentPayload = buildPayload(network, signRes.signature, signRes.authorization);
+        const signRes = await requestGatewaySign(
+          gatewayUrl,
+          apiKey!,
+          payTo,
+          amount,
+          network,
+        );
+        paymentPayload = buildPayload(
+          network,
+          signRes.signature,
+          signRes.authorization,
+        );
         paymentRequirements = buildRequirements(
           network,
           amount,
@@ -137,9 +174,25 @@ export function createPaymentClient(options: PaymentClientOptions): PaymentClien
           resource,
         );
       } else {
-        const signResult = await signLocally(signer!, resolvedChainId, usdcAddress!, payTo, amount);
-        paymentPayload = buildPayload(network, signResult.signature, signResult.authorization);
-        paymentRequirements = buildRequirements(network, amount, usdcAddress!, payTo, resource);
+        const signResult = await signLocally(
+          signer!,
+          resolvedChainId,
+          usdcAddress!,
+          payTo,
+          amount,
+        );
+        paymentPayload = buildPayload(
+          network,
+          signResult.signature,
+          signResult.authorization,
+        );
+        paymentRequirements = buildRequirements(
+          network,
+          amount,
+          usdcAddress!,
+          payTo,
+          resource,
+        );
       }
 
       const settleResponse = await submitSettlement(
@@ -158,7 +211,10 @@ export function createPaymentClient(options: PaymentClientOptions): PaymentClien
 
       budget.record(amount);
       originalConfig.__paidRequest = true;
-      originalConfig.headers.set("Authorization", `Bearer ${settleResponse.receipt}`);
+      originalConfig.headers.set(
+        "Authorization",
+        `Bearer ${settleResponse.receipt}`,
+      );
       return client.request(originalConfig);
     },
   );

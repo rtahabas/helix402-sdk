@@ -68,7 +68,9 @@ describe("PaymentRequired Middleware", () => {
     it("should pass through to handler", async () => {
       const app = createApp();
       const token = makeToken();
-      const res = await request(app).get("/api/data").set("Authorization", `Bearer ${token}`);
+      const res = await request(app)
+        .get("/api/data")
+        .set("Authorization", `Bearer ${token}`);
 
       expect(res.status).toBe(200);
       expect(res.body.data).toBe("premium content");
@@ -83,7 +85,9 @@ describe("PaymentRequired Middleware", () => {
         "wrong-secret",
         { expiresIn: 60 },
       );
-      const res = await request(app).get("/api/data").set("Authorization", `Bearer ${token}`);
+      const res = await request(app)
+        .get("/api/data")
+        .set("Authorization", `Bearer ${token}`);
 
       expect(res.status).toBe(403);
       expect(res.body.error).toBe("Invalid receipt");
@@ -96,7 +100,9 @@ describe("PaymentRequired Middleware", () => {
         SECRET,
         { expiresIn: -10 },
       );
-      const res = await request(app).get("/api/data").set("Authorization", `Bearer ${token}`);
+      const res = await request(app)
+        .get("/api/data")
+        .set("Authorization", `Bearer ${token}`);
 
       expect(res.status).toBe(403);
     });
@@ -104,7 +110,9 @@ describe("PaymentRequired Middleware", () => {
     it("should return 403 for wrong merchant wallet", async () => {
       const app = createApp();
       const token = makeToken({ sub: "0x" + "1".repeat(40) });
-      const res = await request(app).get("/api/data").set("Authorization", `Bearer ${token}`);
+      const res = await request(app)
+        .get("/api/data")
+        .set("Authorization", `Bearer ${token}`);
 
       expect(res.status).toBe(403);
       expect(res.body.error).toBe("Receipt merchant mismatch");
@@ -113,7 +121,9 @@ describe("PaymentRequired Middleware", () => {
     it("should return 403 for wrong amount", async () => {
       const app = createApp();
       const token = makeToken({ amount: "999999" });
-      const res = await request(app).get("/api/data").set("Authorization", `Bearer ${token}`);
+      const res = await request(app)
+        .get("/api/data")
+        .set("Authorization", `Bearer ${token}`);
 
       expect(res.status).toBe(403);
       expect(res.body.error).toBe("Receipt amount mismatch");
@@ -122,7 +132,9 @@ describe("PaymentRequired Middleware", () => {
     it("should return 403 for wrong resource", async () => {
       const app = createApp();
       const token = makeToken({ resource: "/wrong/path" });
-      const res = await request(app).get("/api/data").set("Authorization", `Bearer ${token}`);
+      const res = await request(app)
+        .get("/api/data")
+        .set("Authorization", `Bearer ${token}`);
 
       expect(res.status).toBe(403);
       expect(res.body.error).toBe("Receipt resource mismatch");

@@ -1,7 +1,9 @@
 import type { AxiosResponse } from "axios";
 import type { X402PaymentRequired, ParsedPaymentRequirement } from "./types";
 
-export function parsePaymentRequired(response: AxiosResponse): ParsedPaymentRequirement | null {
+export function parsePaymentRequired(
+  response: AxiosResponse,
+): ParsedPaymentRequirement | null {
   const headerValue = response.headers?.["payment-required"];
   if (typeof headerValue === "string" && headerValue.length > 0) {
     try {
@@ -20,7 +22,9 @@ export function parsePaymentRequired(response: AxiosResponse): ParsedPaymentRequ
             payTo: accept.payTo,
             resource: decoded.resource,
             facilitatorUrl:
-              typeof accept.facilitatorUrl === "string" ? accept.facilitatorUrl : undefined,
+              typeof accept.facilitatorUrl === "string"
+                ? accept.facilitatorUrl
+                : undefined,
           };
         }
       }
@@ -39,7 +43,10 @@ export function parsePaymentRequired(response: AxiosResponse): ParsedPaymentRequ
       amount: body.price,
       payTo: body.wallet,
       resource: body.resource,
-      facilitatorUrl: typeof body.facilitatorUrl === "string" ? body.facilitatorUrl : undefined,
+      facilitatorUrl:
+        typeof body.facilitatorUrl === "string"
+          ? body.facilitatorUrl
+          : undefined,
     };
   }
   return null;
