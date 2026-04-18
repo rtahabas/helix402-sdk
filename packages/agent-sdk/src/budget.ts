@@ -3,15 +3,25 @@
  * Accepts human-readable USDC values (e.g. "1.00" = 1 USDC).
  */
 
-import { BudgetPolicy, BudgetGuard, BudgetState, Helix402Error, ErrorCodes } from "./types";
+import {
+  BudgetPolicy,
+  BudgetGuard,
+  BudgetState,
+  Helix402Error,
+  ErrorCodes,
+} from "./types";
 import { validateAmount, parseUSDC, formatUSDC } from "./validation";
 
 /** Creates a budget guard. Policy values are in human-readable USDC (e.g. "1.00"). */
 export function createBudgetGuard(policy: BudgetPolicy = {}): BudgetGuard {
   let dailySpent = 0n;
   let lastDay = new Date().toISOString().slice(0, 10);
-  const maxSpendPerCall = policy.maxSpendPerCall ? BigInt(parseUSDC(policy.maxSpendPerCall)) : 0n;
-  const dailyLimit = policy.dailyLimit ? BigInt(parseUSDC(policy.dailyLimit)) : 0n;
+  const maxSpendPerCall = policy.maxSpendPerCall
+    ? BigInt(parseUSDC(policy.maxSpendPerCall))
+    : 0n;
+  const dailyLimit = policy.dailyLimit
+    ? BigInt(parseUSDC(policy.dailyLimit))
+    : 0n;
 
   function resetIfNeeded(): void {
     const today = new Date().toISOString().slice(0, 10);
@@ -30,7 +40,10 @@ export function createBudgetGuard(policy: BudgetPolicy = {}): BudgetGuard {
           `Budget exceeded: per-call max ${formatUSDC(maxSpendPerCall)} USDC, requested ${formatUSDC(value)} USDC`,
           ErrorCodes.BUDGET_EXCEEDED,
           undefined,
-          { maxSpendPerCall: formatUSDC(maxSpendPerCall), requested: formatUSDC(value) },
+          {
+            maxSpendPerCall: formatUSDC(maxSpendPerCall),
+            requested: formatUSDC(value),
+          },
         );
       }
       if (dailyLimit > 0n && dailySpent + value > dailyLimit) {

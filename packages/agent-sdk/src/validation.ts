@@ -10,7 +10,10 @@ const PRIVATE_KEY_REGEX = /^0x[a-fA-F0-9]{64}$/;
 const API_KEY_REGEX = /^(ag_|hx_agent_)[a-zA-Z0-9]+$/;
 
 /** Validate Ethereum address format. */
-export function validateEthereumAddress(address: string, fieldName: string): void {
+export function validateEthereumAddress(
+  address: string,
+  fieldName: string,
+): void {
   if (!ETH_ADDRESS_REGEX.test(address)) {
     throw new Helix402Error(
       `Invalid ${fieldName}: must be 0x-prefixed 40-char hex address`,
@@ -57,7 +60,10 @@ export function validateAmount(amount: string | number): bigint {
   try {
     const value = BigInt(amount);
     if (value <= 0n) {
-      throw new Helix402Error("Amount must be positive", ErrorCodes.INVALID_AMOUNT);
+      throw new Helix402Error(
+        "Amount must be positive",
+        ErrorCodes.INVALID_AMOUNT,
+      );
     }
     return value;
   } catch (err) {
@@ -77,10 +83,15 @@ export function parseUSDC(amount: string | number): string {
   const str = String(amount);
   const parts = str.split(".");
   const whole = parts[0] || "0";
-  const frac = (parts[1] || "").padEnd(USDC_DECIMALS, "0").slice(0, USDC_DECIMALS);
+  const frac = (parts[1] || "")
+    .padEnd(USDC_DECIMALS, "0")
+    .slice(0, USDC_DECIMALS);
   const result = BigInt(whole) * BigInt(10 ** USDC_DECIMALS) + BigInt(frac);
   if (result <= 0n) {
-    throw new Helix402Error(`Invalid USDC amount: "${amount}"`, ErrorCodes.INVALID_AMOUNT);
+    throw new Helix402Error(
+      `Invalid USDC amount: "${amount}"`,
+      ErrorCodes.INVALID_AMOUNT,
+    );
   }
   return result.toString();
 }

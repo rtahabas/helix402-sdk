@@ -21,7 +21,13 @@
 
 import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
-import { createPaymentClient, getServices, getPlans, subscribe, getCredits } from "./index";
+import {
+  createPaymentClient,
+  getServices,
+  getPlans,
+  subscribe,
+  getCredits,
+} from "./index";
 import type { PaymentClientOptions, PaymentClientResult } from "./types";
 
 // ─── Options ────────────────────────────────────────────────────
@@ -48,7 +54,10 @@ class DiscoverServicesTool extends StructuredTool {
     "Returns service names, descriptions, endpoints, and prices. " +
     "Use this to find what data sources are available before making paid calls.";
   schema = z.object({
-    search: z.string().optional().describe("Optional search term to filter services"),
+    search: z
+      .string()
+      .optional()
+      .describe("Optional search term to filter services"),
   });
 
   private gatewayUrl: string;
@@ -143,7 +152,11 @@ class CheckBudgetTool extends StructuredTool {
   private apiKey: string;
   private gatewayUrl: string;
 
-  constructor(payment: PaymentClientResult, apiKey: string, gatewayUrl: string) {
+  constructor(
+    payment: PaymentClientResult,
+    apiKey: string,
+    gatewayUrl: string,
+  ) {
     super();
     this.payment = payment;
     this.apiKey = apiKey;
@@ -153,7 +166,9 @@ class CheckBudgetTool extends StructuredTool {
   async _call(): Promise<string> {
     try {
       const budgetState = this.payment.budget.getState();
-      const credits = await getCredits(this.gatewayUrl, this.apiKey).catch(() => null);
+      const credits = await getCredits(this.gatewayUrl, this.apiKey).catch(
+        () => null,
+      );
 
       return JSON.stringify(
         {
@@ -216,7 +231,11 @@ class SubscribePlanTool extends StructuredTool {
 
   async _call(input: { planId: string }): Promise<string> {
     try {
-      const result = await subscribe(this.gatewayUrl, this.apiKey, input.planId);
+      const result = await subscribe(
+        this.gatewayUrl,
+        this.apiKey,
+        input.planId,
+      );
       return JSON.stringify(result, null, 2);
     } catch (err) {
       return JSON.stringify({ error: String(err) });
@@ -231,7 +250,9 @@ class SubscribePlanTool extends StructuredTool {
  *
  * Returns 5 tools: discover_services, call_paid_api, check_budget, get_plans, subscribe.
  */
-export function createHelix402Tools(options: Helix402ToolsOptions): StructuredTool[] {
+export function createHelix402Tools(
+  options: Helix402ToolsOptions,
+): StructuredTool[] {
   const paymentOpts: PaymentClientOptions = {
     gatewayUrl: options.gatewayUrl,
     apiKey: options.apiKey,

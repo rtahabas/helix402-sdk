@@ -24,7 +24,11 @@ describe("Configuration Validation", () => {
 
   it("throws when neither apiKey nor privateKey", () => {
     expectHelix402Error(
-      () => createPaymentClient({ gatewayUrl: "http://localhost:3001", network: "base" }),
+      () =>
+        createPaymentClient({
+          gatewayUrl: "http://localhost:3001",
+          network: "base",
+        }),
       ErrorCodes.INVALID_CONFIG,
     );
   });
@@ -143,7 +147,8 @@ describe("Configuration Validation", () => {
     const { signer } = createPaymentClient({
       gatewayUrl: "http://localhost:3001",
       network: "base",
-      privateKey: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+      privateKey:
+        "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
       rpcUrl: "http://localhost:8545",
       usdcAddress: "0x" + "a".repeat(40),
     });
@@ -177,12 +182,18 @@ describe("Budget Guard", () => {
 
   it("throws on non-numeric amount", () => {
     const budget = createBudgetGuard({ maxSpendPerCall: "1.00" });
-    expectHelix402Error(() => budget.check("not-a-number"), ErrorCodes.INVALID_AMOUNT);
+    expectHelix402Error(
+      () => budget.check("not-a-number"),
+      ErrorCodes.INVALID_AMOUNT,
+    );
   });
 
   it("per-call exceed includes USDC details", () => {
     const budget = createBudgetGuard({ maxSpendPerCall: "0.10" }); // 100000 smallest
-    const err = expectHelix402Error(() => budget.check("200000"), ErrorCodes.BUDGET_EXCEEDED);
+    const err = expectHelix402Error(
+      () => budget.check("200000"),
+      ErrorCodes.BUDGET_EXCEEDED,
+    );
     expect(err.details?.maxSpendPerCall).toBe("0.100000");
     expect(err.details?.requested).toBe("0.200000");
   });
@@ -190,13 +201,19 @@ describe("Budget Guard", () => {
   it("daily limit exceed includes cumulative info", () => {
     const budget = createBudgetGuard({ dailyLimit: "0.50" }); // 500000 smallest
     budget.record("300000");
-    const err = expectHelix402Error(() => budget.check("300000"), ErrorCodes.BUDGET_EXCEEDED);
+    const err = expectHelix402Error(
+      () => budget.check("300000"),
+      ErrorCodes.BUDGET_EXCEEDED,
+    );
     expect(err.details?.dailySpent).toBe("0.300000");
     expect(err.details?.dailyLimit).toBe("0.500000");
   });
 
   it("allows within limits", () => {
-    const budget = createBudgetGuard({ maxSpendPerCall: "1.00", dailyLimit: "5.00" });
+    const budget = createBudgetGuard({
+      maxSpendPerCall: "1.00",
+      dailyLimit: "5.00",
+    });
     expect(() => budget.check("500000")).not.toThrow(); // 0.50 < 1.00
   });
 

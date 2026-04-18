@@ -1,6 +1,10 @@
 import axios from "axios";
 import { ethers } from "ethers";
-import type { X402PaymentPayload, X402PaymentRequirements, SignPaymentResponse } from "./types";
+import type {
+  X402PaymentPayload,
+  X402PaymentRequirements,
+  SignPaymentResponse,
+} from "./types";
 import { Helix402Error, ErrorCodes } from "./types";
 import { extractErrorMessage } from "./validation";
 import {
@@ -16,7 +20,12 @@ export function buildPayload(
   signature: string,
   authorization: SignPaymentResponse["authorization"],
 ): X402PaymentPayload {
-  return { x402Version: "1", scheme: "exact", network, payload: { signature, authorization } };
+  return {
+    x402Version: "1",
+    scheme: "exact",
+    network,
+    payload: { signature, authorization },
+  };
 }
 
 export function buildRequirements(
@@ -65,7 +74,10 @@ export async function signLocally(
   usdcAddress: string,
   payTo: string,
   amount: string,
-): Promise<{ signature: string; authorization: SignPaymentResponse["authorization"] }> {
+): Promise<{
+  signature: string;
+  authorization: SignPaymentResponse["authorization"];
+}> {
   const now = Math.floor(Date.now() / 1000);
   const nonce = ethers.hexlify(ethers.randomBytes(32));
   const authorization = {
@@ -82,7 +94,11 @@ export async function signLocally(
     chainId,
     verifyingContract: usdcAddress,
   };
-  const signature = await signer.signTypedData(domain, EIP712_TRANSFER_AUTH_TYPES, authorization);
+  const signature = await signer.signTypedData(
+    domain,
+    EIP712_TRANSFER_AUTH_TYPES,
+    authorization,
+  );
   return {
     signature,
     authorization: {
