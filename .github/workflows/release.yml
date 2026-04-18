@@ -1,0 +1,65 @@
+name: NPM Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package to publish
+        required: true
+        type: choice
+        options:
+          - merchant-sdk
+          - agent-sdk
+          - contracts
+          - all
+      tag:
+        description: npm dist-tag (beta / latest / next)
+        required: true
+        default: beta
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: Upgrade npm (OIDC trusted publishing requires >= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci --include=dev
+
+      - name: Quality gate — typecheck + unit tests
+        run: npm run typecheck && npm run test:unit
+
+      - name: Publish @helix402/merchant-sdk
+        if: inputs.package == 'merchant-sdk' || inputs.package == 'all'
+        working-directory: packages/merchant-sdk
+        run: |
+          npm run build
+          npm publish --access public --tag ${{ inputs.tag }}
+
+      - name: Publish @helix402/agent-sdk
+        if: inputs.package == 'agent-sdk' || inputs.package == 'all'
+        working-directory: packages/agent-sdk
+        run: |
+          npm run build
+          npm publish --access public --tag ${{ inputs.tag }}
+
+      - name: Publish @helix402/contracts
+        if: inputs.package == 'contracts' || inputs.package == 'all'
+        working-directory: packages/contracts
+        run: |
+          npm run build
+          npm publish --access public --tag ${{ inputs.tag }}

@@ -1,0 +1,66 @@
+{
+  "name": "@helix402/merchant-sdk",
+  "version": "0.1.0-beta.3",
+  "description": "x402 payment middleware for Express — monetize your API with USDC",
+  "author": "Helix402",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/rtahabas/helix402-sdk/tree/main/packages/merchant-sdk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rtahabas/helix402-sdk.git",
+    "directory": "packages/merchant-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/rtahabas/helix402-sdk/issues"
+  },
+  "keywords": [
+    "x402",
+    "payment",
+    "express",
+    "middleware",
+    "usdc",
+    "monetize",
+    "api",
+    "helix402"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/__tests__",
+    "!dist/**/*.map",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm run test"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  },
+  "peerDependencies": {
+    "express": ">=4.0.0"
+  },
+  "devDependencies": {
+    "express": "^4.21.0",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.0"
+  }
+}
