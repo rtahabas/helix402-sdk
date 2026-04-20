@@ -34,6 +34,7 @@ import {
   submitSettlement,
 } from "./signing";
 import { parsePaymentRequired } from "./parser";
+import { applyProxyRewrite } from "./proxy";
 
 // Re-export public API
 export { createBudgetGuard } from "./budget";
@@ -69,6 +70,7 @@ export function createPaymentClient(
     budgetPolicy,
     axiosConfig = {},
     timeoutMs = DEFAULT_TIMEOUT_MS,
+    proxy = false,
   } = options;
 
   if (!gatewayUrl)
@@ -125,6 +127,21 @@ export function createPaymentClient(
       ...((axiosConfig?.headers as Record<string, string>) || {}),
     },
   });
+
+  if (proxy) {
+    if (!apiKey)
+      throw new Helix402Error(
+        "proxy mode requires apiKey (proxy auth is agent-based, not wallet-signed)",
+        ErrorCodes.INVALID_CONFIG,
+      );
+    client.interceptors.request.use((config) =>
+      applyProxyRewrite(config, { gatewayUrl, apiKey }),
+    );
+    // Proxy mode bypasses x402 entirely — no 402 response interceptor,
+    // no signer. Budget guard stays wired so daily spend limits still
+    // surface on downstream payment clients if the caller reuses them.
+    return { client, signer, budget };
+  }
 
   client.interceptors.response.use(
     (response: AxiosResponse) => response,

@@ -43,6 +43,58 @@ const { client, signer } = createPaymentClient({
 });
 ```
 
+## Proxy Mode (Cost Optimizer)
+
+Route every request through the Helix402 gateway's cache — no x402 payment
+flow, just response deduplication for idempotent GETs. Drop-in: keep your
+existing axios call sites, flip one flag.
+
+```typescript
+const { client } = createPaymentClient({
+  gatewayUrl: "https://api.helix402.com",
+  apiKey: process.env.HELIX_API_KEY,
+  network: "base",
+  proxy: true,                             // ← enable proxy mode
+  axiosConfig: { baseURL: "https://api.coingecko.com" },
+});
+
+// Same call site as before. Under the hood the SDK sends:
+//   POST https://api.helix402.com/api/v1/proxy
+//   X-Helix-Target-Url: https://api.coingecko.com/simple/price?ids=bitcoin
+const r = await client.get("/simple/price", { params: { ids: "bitcoin" } });
+
+// Gateway annotates every response:
+r.headers["x-helix-cache"]; // "hit" | "miss" | "skip"
+```
+
+**When to use.** Multi-agent stacks that call the same upstream resources
+over and over (market-data, search, embeddings lookups, signed-URL
+fetches). One agent's fetch populates the cache; the next N agents in
+your pipeline get the cached response with no upstream call.
+
+**Per-call upstream auth.** If you need to pass an auth header to the
+upstream (not to Helix), set `Authorization` as usual — the SDK promotes
+it to `X-Helix-Upstream-Auth` before the gateway swaps in the agent key:
+
+```typescript
+await client.get("/me", {
+  headers: { Authorization: "Bearer user-scoped-upstream-token" },
+});
+```
+
+**Limits in v0.1.**
+- Only `GET` responses are cached. `POST`/`PUT`/`DELETE` pass through
+  without dedup — mutations must never be replayed from cache.
+- Only `200` responses are stored. Other statuses stream through with
+  `x-helix-cache: skip`.
+- `text/event-stream` and other streaming bodies are not buffered.
+- Default 60 req/min per agent rate limit. Increase on request in beta.
+
+**Proxy mode ≠ payment mode.** `proxy: true` bypasses the x402 402
+interceptor entirely — you will not trigger settlement. If your upstream
+sits behind x402 paywalls, keep `proxy: false` (the default) or use two
+separate clients.
+
 ## Error Handling
 
 ```typescript
@@ -79,6 +131,7 @@ try {
 | `usdcAddress` | string | Self-custody | USDC contract |
 | `budgetPolicy` | object | | `{ maxSpendPerCall, dailyLimit }` in USDC |
 | `timeoutMs` | number | | Default: 30000 |
+| `proxy` | boolean | | Route all requests through the gateway cache. Requires `apiKey`. |
 
 *Either `apiKey` or `privateKey` required, not both.
 
