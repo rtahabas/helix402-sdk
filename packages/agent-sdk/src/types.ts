@@ -74,6 +74,15 @@ export interface PaymentClientOptions {
 
   /** Request timeout in milliseconds. Default: 30000 (30s). */
   timeoutMs?: number;
+
+  /**
+   * Route every request through the Helix402 gateway's `/api/v1/proxy`
+   * endpoint — enables response caching + dedup without any x402 payment
+   * flow. Requires `apiKey` (proxy auth is agent-based, not wallet-signed).
+   * The agent's original `Authorization` header, if any, is forwarded
+   * upstream via `X-Helix-Upstream-Auth`.
+   */
+  proxy?: boolean;
 }
 
 /** Return type of createPaymentClient. */
