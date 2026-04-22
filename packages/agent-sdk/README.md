@@ -20,8 +20,8 @@ const { client, budget } = createPaymentClient({
   apiKey: process.env.HELIX_API_KEY,
   network: "base",
   budgetPolicy: {
-    maxSpendPerCall: "1.00",  // 1 USDC max per request
-    dailyLimit: "10.00",      // 10 USDC daily
+    maxSpendPerCall: "1.00", // 1 USDC max per request
+    dailyLimit: "10.00", // 10 USDC daily
   },
 });
 
@@ -54,7 +54,7 @@ const { client } = createPaymentClient({
   gatewayUrl: "https://api.helix402.com",
   apiKey: process.env.HELIX_API_KEY,
   network: "base",
-  proxy: true,                             // ← enable proxy mode
+  proxy: true, // ← enable proxy mode
   axiosConfig: { baseURL: "https://api.coingecko.com" },
 });
 
@@ -83,6 +83,7 @@ await client.get("/me", {
 ```
 
 **Limits in v0.1.**
+
 - Only `GET` responses are cached. `POST`/`PUT`/`DELETE` pass through
   without dedup — mutations must never be replayed from cache.
 - Only `200` responses are stored. Other statuses stream through with
@@ -121,29 +122,29 @@ try {
 
 ## Configuration
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `gatewayUrl` | string | ✅ | Helix402 gateway URL |
-| `network` | string | ✅ | `"base"`, `"base-sepolia"`, `"ethereum"` |
-| `apiKey` | string | ✅* | Agent API key (managed mode) |
-| `privateKey` | string | ✅* | Private key (self-custody) |
-| `rpcUrl` | string | Self-custody | Blockchain RPC |
-| `usdcAddress` | string | Self-custody | USDC contract |
-| `budgetPolicy` | object | | `{ maxSpendPerCall, dailyLimit }` in USDC |
-| `timeoutMs` | number | | Default: 30000 |
-| `proxy` | boolean | | Route all requests through the gateway cache. Requires `apiKey`. |
+| Option         | Type    | Required     | Description                                                      |
+| -------------- | ------- | ------------ | ---------------------------------------------------------------- |
+| `gatewayUrl`   | string  | ✅           | Helix402 gateway URL                                             |
+| `network`      | string  | ✅           | `"base"`, `"base-sepolia"`, `"ethereum"`                         |
+| `apiKey`       | string  | ✅\*         | Agent API key (managed mode)                                     |
+| `privateKey`   | string  | ✅\*         | Private key (self-custody)                                       |
+| `rpcUrl`       | string  | Self-custody | Blockchain RPC                                                   |
+| `usdcAddress`  | string  | Self-custody | USDC contract                                                    |
+| `budgetPolicy` | object  |              | `{ maxSpendPerCall, dailyLimit }` in USDC                        |
+| `timeoutMs`    | number  |              | Default: 30000                                                   |
+| `proxy`        | boolean |              | Route all requests through the gateway cache. Requires `apiKey`. |
 
-*Either `apiKey` or `privateKey` required, not both.
+\*Either `apiKey` or `privateKey` required, not both.
 
 ## Supported Networks
 
-| Network | ID | Chain |
-|---------|----|-------|
-| Base | `"base"` | 8453 |
-| Base Sepolia | `"base-sepolia"` | 84532 |
-| Ethereum | `"ethereum"` | 1 |
+| Network          | ID                   | Chain    |
+| ---------------- | -------------------- | -------- |
+| Base             | `"base"`             | 8453     |
+| Base Sepolia     | `"base-sepolia"`     | 84532    |
+| Ethereum         | `"ethereum"`         | 1        |
 | Ethereum Sepolia | `"ethereum-sepolia"` | 11155111 |
 
 ## License
 
-MIT
+Apache-2.0 — see [LICENSE](../../LICENSE) and [NOTICE](../../NOTICE).

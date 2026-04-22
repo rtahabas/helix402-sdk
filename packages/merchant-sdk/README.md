@@ -16,9 +16,10 @@ import { createPaymentRequiredMiddleware } from "@helix402/merchant-sdk";
 
 const app = express();
 
-app.get("/api/data",
+app.get(
+  "/api/data",
   createPaymentRequiredMiddleware({
-    price: "0.10",              // 0.1 USDC
+    price: "0.10", // 0.1 USDC
     wallet: "0xYourWallet",
     network: "base",
     gatewayPublicKey: process.env.GATEWAY_JWT_SECRET,
@@ -29,7 +30,7 @@ app.get("/api/data",
       data: "premium content",
       paidBy: req.paymentReceipt?.sub,
     });
-  }
+  },
 );
 ```
 
@@ -43,17 +44,17 @@ app.get("/api/data",
 
 ## Configuration
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `price` | string | ✅ | Price in USDC (e.g. `"0.10"` = 0.1 USDC) |
-| `wallet` | string | ✅ | Your USDC wallet (0x + 40 hex) |
-| `network` | string | ✅ | `"base"`, `"base-sepolia"`, `"ethereum"` |
-| `gatewayPublicKey` | string | ✅ | JWT verification key |
-| `facilitatorUrl` | string | | Gateway URL for agents |
-| `currency` | string | | Default: `"USDC"` |
-| `audience` | string | | Default: `"402-merchant"` |
-| `maxTimeoutSeconds` | number | | Default: `300` |
-| `resourceResolver` | function | | Default: `req.originalUrl` |
+| Option              | Type     | Required | Description                              |
+| ------------------- | -------- | -------- | ---------------------------------------- |
+| `price`             | string   | ✅       | Price in USDC (e.g. `"0.10"` = 0.1 USDC) |
+| `wallet`            | string   | ✅       | Your USDC wallet (0x + 40 hex)           |
+| `network`           | string   | ✅       | `"base"`, `"base-sepolia"`, `"ethereum"` |
+| `gatewayPublicKey`  | string   | ✅       | JWT verification key                     |
+| `facilitatorUrl`    | string   |          | Gateway URL for agents                   |
+| `currency`          | string   |          | Default: `"USDC"`                        |
+| `audience`          | string   |          | Default: `"402-merchant"`                |
+| `maxTimeoutSeconds` | number   |          | Default: `300`                           |
+| `resourceResolver`  | function |          | Default: `req.originalUrl`               |
 
 ## Payment Receipt
 
@@ -71,4 +72,4 @@ After verification, `req.paymentReceipt` contains:
 
 ## License
 
-MIT
+Apache-2.0 — see [LICENSE](../../LICENSE) and [NOTICE](../../NOTICE).
