@@ -89,7 +89,12 @@ LangChain integration: `import { HelixPaidTool } from "@helix402/agent-sdk/langc
 
 ## Pricing
 
-$0 to start. 1% of each on-chain settlement. No seats, no monthly minimums, no tier you'll forget you're paying for.
+$0 to start. 1% on settled USDC. No seats, no monthly minimums.
+
+When a merchant publishes a plan, the agent pre-pays the bundle in one
+on-chain transfer and subsequent calls debit an off-chain credit ledger —
+per-call gas effectively rounds to zero. Without a plan, settlement is
+per-call at current Base L2 gas cost.
 
 ## Development
 
