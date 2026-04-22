@@ -1,0 +1,18 @@
+{
+  "name": "@helix402/example-multi-agent-pipeline-budget",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@helix402/agent-sdk": "^0.1.0-beta.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.15.0",
+    "typescript": "^5.4.0"
+  }
+}
