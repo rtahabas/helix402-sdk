@@ -17,6 +17,17 @@ Dashboards and alerts tell you after it happens. Helix402 stops it mid-chain.
 
 ## See it
 
+You set a daily cap on a fleet. The fleet starts working. The cap hits.
+The gateway atomically blocks the rest and lands a signed webhook at your
+URL — all in one continuous run:
+
+<p align="center">
+  <img src="./assets/end-to-end-demo.gif" alt="Helix402 end-to-end demo — operator sets cap, fleet works, cap hits, atomic guard fires, signed webhook lands at operator URL" width="780"/>
+</p>
+
+The three guards are also runnable in isolation if you want to verify
+each one separately.
+
 ### Fleet budget cap
 
 10 agents fire concurrent calls against a fleet capped at $0.50/day. Each
