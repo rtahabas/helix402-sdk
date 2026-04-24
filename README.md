@@ -83,6 +83,21 @@ The dedup guard runs in the same DB transaction as the settlement insert,
 so concurrent retries can't slip past the threshold. Source: same gateway
 repo, [`scripts/demo-loop-detection.ts`](https://github.com/rtahabas/helix402/blob/main/scripts/demo-loop-detection.ts).
 
+### Operator notification (webhook)
+
+When a guard fires, the gateway delivers a signed webhook to your URL
+of choice — what wakes you up at 3am instead of the API invoice. The
+demo intercepts the outbound POST so you can see the exact payload
+your receiver would log:
+
+<p align="center">
+  <img src="./assets/webhook-breach-demo.gif" alt="Helix402 webhook on breach demo — fleet hits cap, gateway delivers HMAC-SHA256 signed POST with the breach payload" width="720"/>
+</p>
+
+HMAC-SHA256 over the JSON body with a per-pipeline secret (AES-GCM at
+rest), idempotency via `X-Helix-Event-Id`, and SSRF guard on the target
+URL. Source: [`scripts/demo-webhook-on-breach.ts`](https://github.com/rtahabas/helix402/blob/main/scripts/demo-webhook-on-breach.ts).
+
 ## Flow
 
 ```
