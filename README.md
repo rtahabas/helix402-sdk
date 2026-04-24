@@ -17,6 +17,8 @@ Dashboards and alerts tell you after it happens. Helix402 stops it mid-chain.
 
 ## See it
 
+### Fleet budget cap
+
 10 agents fire concurrent calls against a fleet capped at $0.50/day. Each
 call costs $0.10. Total intent: $1.00 — twice the cap. The gateway lets
 through exactly $0.50 worth and blocks the rest, atomically:
@@ -64,6 +66,22 @@ $ npx tsx scripts/demo-budget-enforcement.ts
 The script runs the production guard code against an in-memory store —
 zero network, zero on-chain, ~1 second on a laptop. Source lives in the
 [gateway repo](https://github.com/rtahabas/helix402).
+
+### Multi-agent loop
+
+A verification crew of 6 agents takes turns calling the same upstream
+resource — the shape of a CrewAI/AutoGen conversation that won't terminate,
+or two verifiers handing the same task back and forth. With a dedup
+threshold of 3 in a 60-second window, the gateway lets the first 3 settle
+and rejects the rest:
+
+<p align="center">
+  <img src="./assets/loop-detection-demo.gif" alt="Helix402 multi-agent loop detection demo — 6 agents call the same resource, gateway lets 3 through and blocks the rest" width="720"/>
+</p>
+
+The dedup guard runs in the same DB transaction as the settlement insert,
+so concurrent retries can't slip past the threshold. Source: same gateway
+repo, [`scripts/demo-loop-detection.ts`](https://github.com/rtahabas/helix402/blob/main/scripts/demo-loop-detection.ts).
 
 ## Flow
 
