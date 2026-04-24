@@ -15,6 +15,56 @@ Dashboards and alerts tell you after it happens. Helix402 stops it mid-chain.
 - **Unified agent identity.** One AgentID across LangChain, CrewAI, AutoGen, LlamaIndex.
 - **x402-native.** USDC on Base, sub-cent fees, sub-2-second settlement. Open standard, no proprietary rail.
 
+## See it
+
+10 agents fire concurrent calls against a fleet capped at $0.50/day. Each
+call costs $0.10. Total intent: $1.00 — twice the cap. The gateway lets
+through exactly $0.50 worth and blocks the rest, atomically:
+
+<p align="center">
+  <img src="./assets/kill-switch-demo.gif" alt="Helix402 fleet kill switch demo — 10 agents try to spend $1, gateway lets $0.50 through and blocks the rest" width="720"/>
+</p>
+
+```
+$ npx tsx scripts/demo-budget-enforcement.ts
+
+  Helix402 — Fleet Kill Switch Demo
+
+  You set the cap. Your fleet tries to overrun it.
+  Watch the gateway hold the line.
+
+  Your cap:    $0.50/day
+  Fleet size:  10 agents
+  They want:   $1.00  (200% of your cap)
+
+  Fleet fires 10 concurrent calls...
+
+  Agent-001  $0.10  ✅ allowed   (your cap: $0.50, used: $0.10)
+  Agent-002  $0.10  ✅ allowed   (your cap: $0.50, used: $0.20)
+  Agent-003  $0.10  ✅ allowed   (your cap: $0.50, used: $0.30)
+  Agent-004  $0.10  ✅ allowed   (your cap: $0.50, used: $0.40)
+  Agent-005  $0.10  ✅ allowed   (your cap: $0.50, used: $0.50)
+  Agent-006  $0.10  ❌ BLOCKED   (your cap hit — kill switch fired)
+  Agent-007  $0.10  ❌ BLOCKED   (your cap hit — kill switch fired)
+  Agent-008  $0.10  ❌ BLOCKED   (your cap hit — kill switch fired)
+  Agent-009  $0.10  ❌ BLOCKED   (your cap hit — kill switch fired)
+  Agent-010  $0.10  ❌ BLOCKED   (your cap hit — kill switch fired)
+
+  Result
+    allowed:     5/10 calls
+    blocked:     5/10 calls
+    you spent:   $0.50  (your cap was $0.50 — not a cent over)
+    overage:     $0.00  ← would have been $0.50 without the gateway
+
+  You set the cap. The gateway enforced it atomically,
+  even with 10 agents firing at the same instant.
+  No 3am surprise.
+```
+
+The script runs the production guard code against an in-memory store —
+zero network, zero on-chain, ~1 second on a laptop. Source lives in the
+[gateway repo](https://github.com/rtahabas/helix402).
+
 ## Flow
 
 ```
