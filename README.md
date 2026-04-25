@@ -2,7 +2,7 @@
 
 **Your agents can't burn more than you let them.**
 
-Official SDKs for [Helix402](https://github.com/rtahabas/helix402) — the x402 gateway that caps fleet spend at the pipeline level and pauses runaway agents before the bill lands. One line per framework, any HTTPS upstream.
+Official SDKs for [Helix402](https://github.com/rtahabas/helix402) — a pipeline gateway for multi-agent systems. Caps fleet spend, detects runaway loops, dedups duplicate API calls across agents — drop-in proxy, no decorator, no code change inside your agents. Optional on-chain settlement via the open x402 protocol when you need it.
 
 ## Why
 
@@ -10,10 +10,11 @@ AI agents fail while continuing to work. A retry loop, a verification chain with
 
 Dashboards and alerts tell you after it happens. Helix402 stops it mid-chain.
 
+- **Drop-in proxy.** Point your agent at the gateway URL with a bearer token. No decorator, no callback handler, no framework adapter. Works with any framework that makes HTTP calls.
 - **Fleet budget enforcement.** Cap what an entire pipeline of agents can spend. Breach once — every agent in the pipeline pauses.
-- **Runaway loop detection.** Two agents in an infinite loop get flagged before the settlement hits.
-- **Unified agent identity.** One AgentID across LangChain, CrewAI, AutoGen, LlamaIndex.
-- **x402-native.** USDC on Base, sub-cent fees, sub-2-second settlement. Open standard, no proprietary rail.
+- **Multi-agent dedup cache.** Five agents in the same pipeline call the same upstream API. The first request hits upstream; the next four are served from cache. Dedup happens across the pipeline, not per-agent.
+- **Runaway loop detection.** Two agents in an infinite back-and-forth get flagged before the bill compounds.
+- **Optional: x402 settlement.** When you do want on-chain payment for paid APIs — USDC on Base, sub-cent fees, sub-2-second settlement — the SDK implements the open x402 protocol end-to-end.
 
 ## See it
 
@@ -57,11 +58,11 @@ $ npx tsx scripts/demo-budget-enforcement.ts
   Agent-003  $0.10  ✅ allowed   (your cap: $0.50, used: $0.30)
   Agent-004  $0.10  ✅ allowed   (your cap: $0.50, used: $0.40)
   Agent-005  $0.10  ✅ allowed   (your cap: $0.50, used: $0.50)
-  Agent-006  $0.10  ❌ BLOCKED   (your cap hit — kill switch fired)
-  Agent-007  $0.10  ❌ BLOCKED   (your cap hit — kill switch fired)
-  Agent-008  $0.10  ❌ BLOCKED   (your cap hit — kill switch fired)
-  Agent-009  $0.10  ❌ BLOCKED   (your cap hit — kill switch fired)
-  Agent-010  $0.10  ❌ BLOCKED   (your cap hit — kill switch fired)
+  Agent-006  $0.10  ❌ BLOCKED   (your cap hit — pipeline paused)
+  Agent-007  $0.10  ❌ BLOCKED   (your cap hit — pipeline paused)
+  Agent-008  $0.10  ❌ BLOCKED   (your cap hit — pipeline paused)
+  Agent-009  $0.10  ❌ BLOCKED   (your cap hit — pipeline paused)
+  Agent-010  $0.10  ❌ BLOCKED   (your cap hit — pipeline paused)
 
   Result
     allowed:     5/10 calls
@@ -112,22 +113,48 @@ URL. Source: [`scripts/demo-webhook-on-breach.ts`](https://github.com/rtahabas/h
 ## Flow
 
 ```
-Agent request ──► Pipeline budget check ──► Upstream call ──► USDC settle on-chain (1% fee)
-                       │                           │
-                       └── loop / overspend ───────┴──► pipeline pauses, webhook fires
+Agent request ──► Gateway: budget + cache check ──► Upstream (or cache hit)
+                       │                                    │
+                       └── loop / overspend ────────────────┴──► pipeline pauses, webhook fires
 ```
 
 ## Packages
 
-| Package                                             | Description                                                | npm                                                                                                                 |
-| --------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| [`@helix402/merchant-sdk`](./packages/merchant-sdk) | Express middleware — monetize your API with USDC           | [![npm](https://img.shields.io/npm/v/@helix402/merchant-sdk)](https://www.npmjs.com/package/@helix402/merchant-sdk) |
-| [`@helix402/agent-sdk`](./packages/agent-sdk)       | AI agent client — automatic 402 handling + pipeline budget | [![npm](https://img.shields.io/npm/v/@helix402/agent-sdk)](https://www.npmjs.com/package/@helix402/agent-sdk)       |
-| [`@helix402/contracts`](./packages/contracts)       | Solidity contracts — atomic settlement + fee split         | [![npm](https://img.shields.io/npm/v/@helix402/contracts)](https://www.npmjs.com/package/@helix402/contracts)       |
+| Package                                             | Description                                                                  | npm                                                                                                                 |
+| --------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| [`@helix402/agent-sdk`](./packages/agent-sdk)       | Pipeline gateway client for AI agents — drop-in proxy + budget + dedup cache | [![npm](https://img.shields.io/npm/v/@helix402/agent-sdk)](https://www.npmjs.com/package/@helix402/agent-sdk)       |
+| [`@helix402/merchant-sdk`](./packages/merchant-sdk) | Optional Express middleware — charge for your API on-chain via x402          | [![npm](https://img.shields.io/npm/v/@helix402/merchant-sdk)](https://www.npmjs.com/package/@helix402/merchant-sdk) |
+| [`@helix402/contracts`](./packages/contracts)       | Solidity contracts — used only when x402 settlement mode is on               | [![npm](https://img.shields.io/npm/v/@helix402/contracts)](https://www.npmjs.com/package/@helix402/contracts)       |
 
 ## Quick Start
 
-### Merchant (API provider)
+### Agent (consumer) — proxy mode, default
+
+```bash
+npm install @helix402/agent-sdk
+```
+
+```ts
+import { createPaymentClient } from "@helix402/agent-sdk";
+
+const { client } = createPaymentClient({
+  gatewayUrl: process.env.HELIX_GATEWAY!,
+  apiKey: process.env.HELIX_API_KEY!,
+  proxy: true, // drop-in proxy mode — no on-chain settlement required
+  budgetPolicy: {
+    maxSpendPerCall: "1.00", // hard cap per request (USD-equivalent)
+    dailyLimit: "10.00", // hard cap per day
+  },
+});
+
+// Pipeline budget, loop detection, and dedup cache happen at the gateway.
+// If the cap is breached, the call throws — it doesn't leak spend.
+const res = await client.get("https://your-upstream.com/api/data?q=...");
+```
+
+LangChain integration: `import { HelixPaidTool } from "@helix402/agent-sdk/langchain"`.
+
+### Merchant (API provider) — optional, only when you sell paid APIs via x402
 
 ```bash
 npm install @helix402/merchant-sdk
@@ -156,39 +183,17 @@ app.get(
 );
 ```
 
-### Agent (consumer)
-
-```bash
-npm install @helix402/agent-sdk
-```
-
-```ts
-import { createPaymentClient } from "@helix402/agent-sdk";
-
-const { client, budget } = createPaymentClient({
-  gatewayUrl: "https://api.rtahabas.com",
-  apiKey: process.env.HELIX_API_KEY!,
-  network: "base",
-  budgetPolicy: {
-    maxSpendPerCall: "1.00", // hard cap per request
-    dailyLimit: "10.00", // hard cap per day
-  },
-});
-
-// Auto-pays on 402. If budget is breached, the call throws — it doesn't leak spend.
-const res = await client.get("https://your-merchant.com/premium/search?q=...");
-```
-
-LangChain integration: `import { HelixPaidTool } from "@helix402/agent-sdk/langchain"`.
-
 ## Pricing
 
-$0 to start. 1% on settled USDC. No seats, no monthly minimums.
+```
+Free        $0      1 pipeline, 3 agents, 10K events / month
+Solo        $29     3 pipelines, 10 agents, 100K events
+Team        $99     10 pipelines, 50 agents, 1M events
+Org         $299    unlimited pipelines, 200 agents, 5M events
+Enterprise  Custom  unlimited + on-chain settlement (x402) + compliance + SLA
+```
 
-When a merchant publishes a plan, the agent pre-pays the bundle in one
-on-chain transfer and subsequent calls debit an off-chain credit ledger —
-per-call gas effectively rounds to zero. Without a plan, settlement is
-per-call at current Base L2 gas cost.
+Self-host the gateway free under the source-available license — every tier feature, no caps, you run the binary. Pricing applies to the hosted gateway service.
 
 ## Development
 
@@ -204,8 +209,7 @@ Requires Node 20+.
 
 ## Links
 
-- **Gateway + demo:** https://github.com/rtahabas/helix402
-- **Hosted API:** https://api.rtahabas.com
+- **Gateway + demos:** https://github.com/rtahabas/helix402
 - **Dashboard:** https://helix402.vercel.app
 
 ## License

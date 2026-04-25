@@ -1,7 +1,7 @@
 {
   "name": "@helix402/merchant-sdk",
   "version": "0.1.0-beta.3",
-  "description": "x402 payment middleware for Express — monetize your API with USDC",
+  "description": "Optional x402 payment middleware for Express APIs — Helix402 component for on-chain monetization (proxy mode is the default; this is opt-in)",
   "author": "Helix402",
   "license": "Apache-2.0",
   "homepage": "https://github.com/rtahabas/helix402-sdk/tree/main/packages/merchant-sdk",
