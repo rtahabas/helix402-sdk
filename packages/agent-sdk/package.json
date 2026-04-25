@@ -1,7 +1,7 @@
 {
   "name": "@helix402/agent-sdk",
   "version": "0.1.0-beta.4",
-  "description": "x402 payment SDK for AI agents — automatic HTTP 402 handling with managed wallets",
+  "description": "Pipeline gateway client for multi-agent systems — drop-in proxy, budget enforcement, dedup cache (optional x402 settlement)",
   "author": "Helix402",
   "license": "Apache-2.0",
   "homepage": "https://github.com/rtahabas/helix402-sdk/tree/main/packages/agent-sdk",
@@ -14,13 +14,18 @@
     "url": "https://github.com/rtahabas/helix402-sdk/issues"
   },
   "keywords": [
-    "x402",
-    "payment",
+    "pipeline-gateway",
     "ai-agent",
+    "multi-agent",
+    "proxy",
+    "cache",
+    "budget-enforcement",
+    "loop-detection",
+    "agent-governance",
+    "langchain",
+    "crewai",
+    "x402",
     "usdc",
-    "eip-3009",
-    "base",
-    "blockchain",
     "helix402"
   ],
   "engines": {

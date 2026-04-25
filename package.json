@@ -2,7 +2,7 @@
   "name": "@helix402/sdk-monorepo",
   "version": "0.0.0",
   "private": true,
-  "description": "Helix402 SDKs: merchant middleware, agent client, and smart contracts for x402 payments",
+  "description": "Helix402 SDKs — pipeline gateway agent client (drop-in proxy, budget, dedup cache) plus optional x402 merchant middleware and supporting contracts",
   "license": "Apache-2.0",
   "homepage": "https://github.com/rtahabas/helix402-sdk",
   "repository": {
