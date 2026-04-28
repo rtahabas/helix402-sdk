@@ -193,7 +193,7 @@ Org         $299    unlimited pipelines, 200 agents, 5M events
 Enterprise  Custom  unlimited + on-chain settlement (x402) + compliance + SLA
 ```
 
-Self-host the gateway free under the source-available license — every tier feature, no caps, you run the binary. Pricing applies to the hosted gateway service.
+Self-host the gateway free under MIT — every tier feature, no caps, you run the binary. Pricing applies to the hosted gateway service.
 
 ## Development
 
